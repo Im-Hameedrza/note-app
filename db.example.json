@@ -21,7 +21,14 @@
       "lastEdited": "2026-01-01T00:00:00.000Z"
     }
   ],
-  "users": [],
+  "users": [  {
+      "id": "76107a07-cead-4c6e-a256-9c9f2b2c6991",
+      "username": "test",
+      "usernameKey": "test",
+      "email": "test@gmail.com",
+      "passwordHash": "12345",
+      "createdAt": "2026-10-05T20:19:37.151Z"
+    }],
   "sessions": [],
   "passwordResets": [],
   "rateLimits": [],
