@@ -45,7 +45,7 @@ const { chromium } = require(process.env.THEME_PLAYWRIGHT_PATH || "playwright");
   const origin = "http://localhost:" + port;
   const server = spawn(process.execPath, ["node_modules/next/dist/bin/next", "dev", "--webpack", "-p", String(port)], {
     env: {
-      ...process.env, DATABASE_FILE: database, APP_URL: origin,
+      ...process.env, BLOB_READ_WRITE_TOKEN: "", VERCEL: "", DATABASE_FILE: database, APP_URL: origin,
       AUTH_TEST_BUILD: "1", NEXT_TELEMETRY_DISABLED: "1", AUTH_TRUSTED_PROXY_SECRET: "",
       SMTP_HOST: "127.0.0.1", SMTP_PORT: String(smtp.address().port),
       SMTP_FROM: "Note App <settings@example.test>", SMTP_USER: "", SMTP_PASSWORD: "",
@@ -194,7 +194,7 @@ const { chromium } = require(process.env.THEME_PLAYWRIGHT_PATH || "playwright");
           assert.equal(await page.locator("html").getAttribute("data-font"), "geist");
           assert.equal(await page.locator("html").getAttribute("data-theme"), theme);
           if ([375, 768, 1440].includes(width)) {
-            await page.screenshot({ path: path.join(directory, theme + "-" + width + "-" + route.split("/").at(-1) + ".png"), fullPage: true });
+            await page.screenshot({ caret: "initial", path: path.join(directory, theme + "-" + width + "-" + route.split("/").at(-1) + ".png"), fullPage: true });
           }
         }
       }

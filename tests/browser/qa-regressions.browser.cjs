@@ -51,15 +51,15 @@ async function test(id, name, run) {
   catch (error) {
     cases.push({ id, name, result: "FAIL", error: error.stack });
     console.error("FAIL " + id + " " + name + ": " + error.message);
-    await page?.screenshot({ path: path.join(directory, id + ".png"), fullPage: true }).catch(() => {});
+    await page?.screenshot({ caret: "initial", path: path.join(directory, id + ".png"), fullPage: true }).catch(() => {});
     process.exitCode = 1;
   }
   await fs.writeFile(path.join(directory, "results.json"), JSON.stringify({ cases, runtimeErrors }, null, 2));
 }
 async function start(databaseFile, serverPort, env = {}) {
   const base = "http://localhost:" + serverPort;
-  const server = spawn(process.execPath, ["node_modules/next/dist/bin/next", "start", "-p", String(serverPort)], {
-    env: { ...process.env, DATABASE_FILE: databaseFile, APP_URL: base, AUTH_TRUSTED_PROXY_SECRET: "", SMTP_HOST: "", SMTP_FROM: "", ...env },
+  const server = spawn(process.execPath, ["node_modules/next/dist/bin/next", "dev", "--webpack", "-p", String(serverPort)], {
+    env: { ...process.env, BLOB_READ_WRITE_TOKEN: "", VERCEL: "", AUTH_TEST_BUILD: serverPort === port ? "" : "1", DATABASE_FILE: databaseFile, APP_URL: base, AUTH_TRUSTED_PROXY_SECRET: "", SMTP_HOST: "", SMTP_FROM: "", ...env },
     stdio: ["ignore", "pipe", "pipe"], windowsHide: true,
   });
   servers.push(server);
@@ -68,7 +68,7 @@ async function start(databaseFile, serverPort, env = {}) {
   server.stderr.on("data", data => { log = (log + data).slice(-12000); });
   for (let n = 0; n < 120; n++) {
     if (server.exitCode !== null) throw new Error("QA server exited: " + log);
-    try { if ((await fetch(base + "/auth/signin")).ok) return; } catch {}
+    try { if ((await fetch(base + "/auth/signin")).ok) return server; } catch {}
     await delay(100);
   }
   throw new Error("QA server did not start: " + log);
@@ -341,7 +341,7 @@ async function start(databaseFile, serverPort, env = {}) {
   });
   await test("BUG-003-proxy", "Proxy mode authenticates a single IP header and rejects spoofing/malformed addresses", async () => {
     const proxyDatabase = path.join(directory, "proxy-db.json"), secret = crypto.randomBytes(32).toString("hex"), proxyOrigin = "http://localhost:" + (port + 1);
-    await fs.writeFile(proxyDatabase, JSON.stringify({ notes: [] })); await start(proxyDatabase, port + 1, { AUTH_TRUSTED_PROXY_SECRET: secret });
+    await fs.writeFile(proxyDatabase, JSON.stringify({ notes: [] })); const proxyServer = await start(proxyDatabase, port + 1, { AUTH_TRUSTED_PROXY_SECRET: secret });
     const client = await browser.newContext();
     const send = (action, data, headers = {}) => api("/api/auth/" + action, "POST", data, client, headers, proxyOrigin);
     try {
@@ -354,7 +354,11 @@ async function start(databaseFile, serverPort, env = {}) {
       assert.equal((await send("verify-reset", { token: "invalid" }, { ...headers, "x-auth-client-ip": "2001:db8::1", "X-Forwarded-For": "192.0.2.50" })).status, 429);
       assert.equal((await send("signin", account, headers)).status, 200);
       assert.equal((await send("signup", { ...account, username: "proxy_new", email: "proxynew@example.test" }, { ...headers, "x-auth-client-ip": "192.0.2.5" })).status, 201);
-    } finally { await client.close(); }
+    } finally {
+      await client.close();
+      if (process.platform === "win32") spawnSync("taskkill", ["/PID", String(proxyServer.pid), "/T", "/F"], { windowsHide: true, stdio: "ignore" });
+      else { proxyServer.kill("SIGTERM"); await new Promise(resolve => proxyServer.once("exit", resolve)); }
+    }
   });
   await test("BUG-012-abandoned", "Old ownerless and confirmed-dead-owner locks recover automatically", async () => {
     const lock = database + ".lock";
@@ -413,7 +417,7 @@ async function start(databaseFile, serverPort, env = {}) {
       await go("/note/" + long.id); await button("Edit Note").click(); assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)); await button("Cancel").click();
       await button("Delete Note").click(); const bounds = await page.getByRole("dialog").boundingBox(); assert(bounds.x >= 0 && bounds.x + bounds.width <= width);
       await page.getByRole("dialog").getByRole("button", { name: "Cancel", exact: true }).click();
-      if ([320, 768, 1440].includes(width)) await page.screenshot({ path: path.join(directory, theme + "-" + width + ".png"), fullPage: true });
+      if ([320, 768, 1440].includes(width)) await page.screenshot({ caret: "initial", path: path.join(directory, theme + "-" + width + ".png"), fullPage: true });
     });
   }
   await test("FINAL-integrity", "Real database unchanged, no runtime exceptions, isolated data only", async () => {
@@ -424,6 +428,7 @@ async function start(databaseFile, serverPort, env = {}) {
 })().catch(error => { console.error(error); process.exitCode = 1; }).finally(async () => {
   await browser?.close();
   for (const server of servers) {
+    if (server.exitCode !== null) continue;
     if (process.platform === "win32") spawnSync("taskkill", ["/PID", String(server.pid), "/T", "/F"], { windowsHide: true, stdio: "ignore" });
     else server.kill("SIGTERM");
   }

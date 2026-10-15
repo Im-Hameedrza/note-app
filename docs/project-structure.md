@@ -21,7 +21,7 @@ src/
     server/               Private JSON storage, sessions, hashing, mail and APIs
   providers/              Theme and font state
   services/               Browser API calls
-scripts/                  Explicit non-destructive local setup
+scripts/                  Local setup and private Blob import/backup/recovery CLI
 tests/
   integration/            Safe setup and account/notes API checks
   browser/                Theme, settings and QA regressions
@@ -45,7 +45,7 @@ The root layout reads appearance cookies and supplies theme/font providers. The 
 
 Authentication forms and reset-link handling stay separate from server account operations. Server secrets are never imported into client components. Rate limits are scoped by action and client/account; optional proxy trust is documented in the application guide.
 
-The JSON adapter uses atomic writes, owner-aware locks and serialized abandoned-lock recovery. It is intended for local persistent disk, not distributed or ephemeral storage. For production infrastructure beyond that model, replace the storage adapter rather than exposing the JSON file.
+The centralized server-only database module selects private Vercel Blob when configured and requires it in production. The development-only local adapter retains atomic writes and owner-aware disk locks. Blob uses fresh private reads and conditional ETag writes with bounded retries. Schema validation and the operator-only import/backup/recovery CLI are described in [Blob migration](blob-migration.md).
 
 ## Local-only folders
 

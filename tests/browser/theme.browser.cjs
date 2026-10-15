@@ -5,14 +5,14 @@ const path = require("node:path");
 const { spawn, spawnSync } = require("node:child_process");
 const { chromium } = require(process.env.THEME_PLAYWRIGHT_PATH || "playwright");
 
-// Run after npm run build. Uses an isolated database; never touches real accounts.
+// Uses the development-only local adapter with an isolated synthetic database.
 (async () => {
   const directory = await fs.mkdtemp(path.join(os.tmpdir(), "note-theme-test-"));
   const database = path.join(directory, "db.json");
   await fs.writeFile(database, JSON.stringify({ notes: [] }));
   const origin = "http://localhost:3068";
-  const server = spawn(process.execPath, ["node_modules/next/dist/bin/next", "start", "-p", "3068"], {
-    env: { ...process.env, DATABASE_FILE: database, APP_URL: origin, AUTH_TRUSTED_PROXY_SECRET: "" },
+  const server = spawn(process.execPath, ["node_modules/next/dist/bin/next", "dev", "--webpack", "-p", "3068"], {
+    env: { ...process.env, BLOB_READ_WRITE_TOKEN: "", VERCEL: "", DATABASE_FILE: database, APP_URL: origin, AUTH_TRUSTED_PROXY_SECRET: "" },
     stdio: "ignore", windowsHide: true,
   });
   let browser;
@@ -91,11 +91,11 @@ const { chromium } = require(process.env.THEME_PLAYWRIGHT_PATH || "playwright");
           await themeIs(theme);
           await noOverflow(route, width);
           if ([320, 1440].includes(width) && ["/allnotes", "/add", "/note/" + noteId, "/auth/signin"].includes(route)) {
-            await page.screenshot({ path: path.join(directory, theme + "-" + width + "-" + route.split("/")[1] + ".png"), fullPage: true });
+            await page.screenshot({ caret: "initial", path: path.join(directory, theme + "-" + width + "-" + route.split("/")[1] + ".png"), fullPage: true });
           }
         }
         await go("/setting");
-        await page.screenshot({ path: path.join(directory, theme + "-" + width + ".png"), fullPage: true });
+        await page.screenshot({ caret: "initial", path: path.join(directory, theme + "-" + width + ".png"), fullPage: true });
       }
     }
     console.log("PASS Both themes across 12 routes at 320/768/1024/1440px without horizontal overflow.");
@@ -115,7 +115,7 @@ const { chromium } = require(process.env.THEME_PLAYWRIGHT_PATH || "playwright");
     await page.getByRole("button", { name: "Delete Note", exact: true }).click();
     await page.getByRole("dialog", { name: "Delete Note" }).waitFor();
     await noOverflow("delete dialog", 320);
-    await page.screenshot({ path: path.join(directory, "dark-dialog-mobile.png"), fullPage: true });
+    await page.screenshot({ caret: "initial", path: path.join(directory, "dark-dialog-mobile.png"), fullPage: true });
     await page.getByRole("dialog").getByRole("button", { name: "Cancel", exact: true }).click();
     assert.equal(await page.getByRole("dialog").count(), 0);
     // Exercise the client mutation workflow through its real confirmation UI.
@@ -128,6 +128,7 @@ const { chromium } = require(process.env.THEME_PLAYWRIGHT_PATH || "playwright");
     assert.equal((await (await context.request.get(origin + "/api/notes")).json()).find(note => note.id === noteId).isArchived, true);
 
     await go("/note/" + noteId + "?from=archived");
+    const previousRestoreButton = await page.getByRole("button", { name: "Restore Note", exact: true }).elementHandle();
     await page.getByRole("button", { name: "Restore Note", exact: true }).click();
     await Promise.all([
       page.waitForResponse(response => response.url().endsWith("/api/notes/" + noteId) && response.request().method() === "PATCH" && response.status() === 200),
@@ -135,6 +136,11 @@ const { chromium } = require(process.env.THEME_PLAYWRIGHT_PATH || "playwright");
     ]);
     assert.equal((await (await context.request.get(origin + "/api/notes")).json()).find(note => note.id === noteId).isArchived, false);
 
+    await page.getByRole("dialog", { name: "Restore Note", exact: true }).waitFor({ state: "detached" });
+    // Archive state changes remount NoteActions after the server refresh.
+    await page.waitForFunction(element => !element.isConnected, previousRestoreButton);
+    await previousRestoreButton.dispose();
+    await page.getByRole("button", { name: "Archive Note", exact: true }).waitFor();
     await page.getByRole("button", { name: "Delete Note", exact: true }).click();
     await page.getByRole("dialog", { name: "Delete Note" }).getByRole("button", { name: "Delete Note", exact: true }).click();
     await page.waitForURL("**/allnotes");

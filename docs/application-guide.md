@@ -47,7 +47,7 @@ Passwords are stored as salted scrypt hashes (N=131072, r=8, p=1). Random sessio
 
 ## Storage limits
 
-This keeps the project's local JSON storage, intended for a single app installation with persistent writable disk. It is not suitable for ephemeral/serverless hosting or multiple independent replicas. Atomic writes and a file lock protect simultaneous requests. Back up `db.json`; it now contains private account data and is ignored by Git. An optional server-only `DATABASE_FILE` points to another JSON file.
+Local development uses JSON files with atomic writes and a disk lock. Production exclusively uses private Vercel Blob with fresh reads and conditional ETag writes. See [Blob migration and recovery](blob-migration.md) for setup, imports, backups and limitations. DATABASE_FILE applies only to development.
 
 Lock files now contain an atomically published process ID, host and unique owner token. A confirmed dead local owner is recovered automatically; a live owner is never evicted solely because its lock is old. Old ownerless legacy locks are recoverable after a one-minute initialization grace period. Recovery claims serialize competing reclaimers, and normal writes remain atomic. An occupied live lock returns a retryable HTTP 503 after about ten seconds. Foreign-host or malformed owner metadata is left locked because ownership cannot be established safely. If manual recovery is needed, stop every app process before touching a lock. For a public multi-instance deployment, move the database adapter and rate limiting to transactional shared storage.
 
@@ -91,4 +91,4 @@ Without proxy configuration, standard Next.js Route Handlers do not provide a ve
 
 To enable network-based client scope, set a server-only `AUTH_TRUSTED_PROXY_SECRET` of at least 32 random characters. Your controlled reverse proxy must strip incoming `X-Auth-Proxy-Secret` and `X-Auth-Client-IP`, then inject the configured secret and one validated client IP. Derive that IP from a verified connection or an explicitly allowlisted proxy chain, never an arbitrary incoming forwarded header. Restrict direct upstream access and protect the proxy-to-app transport. Configured mode rejects missing/wrong secrets and malformed or multi-address values; equivalent IPv6 representations share a bucket. Reset-verification traffic remains separate from sign-in/signup traffic even for the same client.
 
-Run `npm run test:qa` after a production build for the 56 note/auth/reliability regressions. See the [testing guide](testing.md) for browser installation and isolated test data handling.
+Run `npm run test:qa` for the 56 note/auth/reliability regressions against an isolated development server. See the [testing guide](testing.md) for browser installation and isolated test data handling.

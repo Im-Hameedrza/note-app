@@ -53,7 +53,7 @@ const port = Number(process.env.AUTH_TEST_PORT || 3057);
 const origin = "http://localhost:" + port;
 const server = spawn(process.execPath, ["node_modules/next/dist/bin/next", "dev", "--webpack", "-p", String(port)], {
   env: {
-    ...process.env,
+    ...process.env, BLOB_READ_WRITE_TOKEN: "", VERCEL: "",
     DATABASE_FILE: databaseFile, APP_URL: origin, AUTH_TRUSTED_PROXY_SECRET: "",
     SMTP_HOST: "127.0.0.1", SMTP_PORT: String(smtp.address().port),
     SMTP_FROM: "Note App <test@example.test>", SMTP_USER: "", SMTP_PASSWORD: "",

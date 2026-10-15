@@ -1,4 +1,5 @@
 import "server-only";
+import { StorageError } from "./storage-schema.mjs";
 
 export class ApiError extends Error {
   constructor(message, status = 400, errors = {}) {
@@ -16,9 +17,9 @@ export function jsonResponse(data, status = 200) {
 }
 
 export function errorResponse(error) {
-  if (error instanceof ApiError) {
+  if (error instanceof ApiError || error instanceof StorageError) {
     return jsonResponse(
-      { message: error.message, errors: error.errors },
+      { message: error.message, errors: error.errors || {} },
       error.status,
     );
   }

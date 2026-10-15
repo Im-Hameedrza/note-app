@@ -38,14 +38,16 @@ All browser suites default to the installed Playwright Chromium browser. `PLAYWR
 ```sh
 npm run lint
 npm run test:setup
+npm run test:storage
 npm run test:auth
 npm run build
+npm run test:production-storage
 npm run test:theme
 npm run test:settings
 npm run test:qa
 ```
 
-Run suites sequentially. Auth and settings development servers share `.next-auth-tests`. Production suites read `.next`; do not rebuild or run a separate dev server using `.next` while those suites are active.
+Run suites sequentially. Auth and settings development servers share `.next-auth-tests`. Theme and QA use .next development output; do not build or run another dev server using that directory while those suites are active. QA secondary servers use .next-auth-tests sequentially.
 
 ## Isolation, ports and artifacts
 
@@ -53,9 +55,9 @@ Run suites sequentially. Auth and settings development servers share `.next-auth
 | --- | --- | --- |
 | Setup | No server | Fresh temporary folders and synthetic sentinels |
 | Auth | Development; 3057 (`AUTH_TEST_PORT`) | Public sample seed in a temporary database; local SMTP capture |
-| Theme | Production; 3068 | Fresh temporary database; no external email |
+| Theme | Development; 3068 | Fresh temporary database; no external email |
 | Settings | Development; 3069 (`SETTINGS_TEST_PORT`) | Fresh temporary database; local SMTP capture |
-| QA | Production; 3077-3079 (`QA_TEST_PORT` plus two ports) | Fresh temporary databases and competing local processes; no external email |
+| QA | Development; 3077-3079 (`QA_TEST_PORT` plus two ports) | Fresh temporary databases and competing local processes; no external email |
 
 The auth suite seeds from `db.example.json`, never from real note content. Auth/QA read the original local database only to verify its bytes remain unchanged. Authentication proxy settings are isolated from local production configuration; explicit proxy-mode cases configure their own test secret. Test accounts and `.test` emails in source are synthetic fixtures, not real credentials.
 
@@ -68,3 +70,21 @@ The 56-case QA suite checks the complete create/view/edit/archive/restore/delete
 Settings history assertions wait for React to commit the expected active menu state after Back/Forward, then still require exactly one active item with the expected label. Existing theme/settings suites also check for unexpected runtime/console and hydration errors.
 
 These automated checks do not replace physical-device, cross-browser, production infrastructure, sustained-load or full security testing. Historical local QA artifacts remain excluded from the public source tree.
+
+## Blob storage validation
+
+Run npm run test:storage for the synthetic mocked-SDK storage/migration tests. The suite checks private uncached reads, ETag retries, contention exhaustion, missing token/blob, upload failures and create-only migration. It does not use a live Blob store.
+
+All existing app integration/browser suites explicitly clear inherited Blob settings and use development-only local JSON fixtures. Theme and QA suites now start next dev; their results are not production Blob end-to-end coverage. Build production separately with npm run build. This is a JavaScript/JSX repository; there is no configured TypeScript project check.
+
+For live validation, use a separate private staging store, explicitly import a reviewed empty database, run registration/login, notes CRUD/archive/restore and a second-user access check, then redeploy the staging function and verify persistence. Never point automated fixtures at a production token. No live migration or deployment is performed by these tests.
+
+Run npm run test:production-storage after npm run build to check that an actual production server returns 503 for missing Blob credentials without falling back to local disk.
+
+## Hydration and SDK transport coverage
+
+Browser screenshots use caret:initial so capture does not inject inline caret styles into server-rendered inputs before hydration. Theme checks still fail on any unexpected hydration/runtime console errors. The archive/restore button retains the exact same utility classes on one line to avoid CRLF attribute mismatches on Windows.
+
+Storage tests include the actual @vercel/blob SDK using Undici MockAgent with outbound networking disabled. They verify authenticated private origin URLs, cache bypass, conditional-write headers, real HTTP 412 error conversion and fresh reads on retry. Existing tests cover five-attempt exhaustion, failed/ambiguous uploads and same-note conflicts. These checks do not substitute for a live private staging-store test.
+
+See the current results and outstanding development-only braces audit findings in [Blob migration and staging readiness](blob-migration.md#verified-follow-up--2026-10-16).

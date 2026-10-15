@@ -25,6 +25,7 @@ function validated(input) {
 }
 
 export async function changeNotes(token, action, input = {}, id, requestId) {
+  let originalNote;
   return updateDatabase(database => {
     const user = sessionUser(database, token);
     if (!user) throw new ApiError("Please sign in to continue.", 401);
@@ -47,6 +48,11 @@ export async function changeNotes(token, action, input = {}, id, requestId) {
     }
     const note = database.notes.find(item => String(item.id) === id && item.userId === user.id);
     if (!note) throw new ApiError("Note not found.", 404);
+    const version = JSON.stringify(note);
+    if (originalNote !== undefined && originalNote !== version) {
+      throw new ApiError("This note changed during your save. Refresh before trying again.", 409);
+    }
+    originalNote = version;
     if (action === "delete") {
       database.notes = database.notes.filter(item => item !== note);
       return { message: "Note deleted." };

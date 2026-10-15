@@ -12,10 +12,14 @@
     "test:settings": "node tests/browser/settings.browser.cjs",
     "test:qa": "node tests/browser/qa-regressions.browser.cjs",
     "setup": "node scripts/setup.mjs",
-    "test:setup": "node --test tests/integration/setup.test.mjs"
+    "test:setup": "node --test tests/integration/setup.test.mjs",
+    "test:production-storage": "node tests/integration/production-storage.test.mjs",
+    "test:storage": "node --conditions=react-server --test tests/integration/blob-storage.test.mjs tests/integration/blob-services.test.mjs",
+    "blob:db": "node --conditions=react-server --env-file-if-exists=.env.local scripts/blob-database.mjs"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
+    "@vercel/blob": "2.8.2",
     "axios": "^1.20.0",
     "date-fns": "^4.4.0",
     "json-server": "^1.0.0-beta.15",
