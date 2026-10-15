@@ -1,26 +1,125 @@
 @import "tailwindcss";
 
+/* Exact design palette. Components use the semantic tokens below. */
+@theme {
+  --color-neutral-950: #0e121b;
+  --color-neutral-900: #191b25;
+  --color-neutral-800: #232530;
+  --color-neutral-700: #2b2e3b;
+  --color-neutral-600: #525866;
+  --color-neutral-500: #717784;
+  --color-neutral-400: #9ea0ae;
+  --color-neutral-300: #cacfda;
+  --color-neutral-200: #e0e4ea;
+  --color-neutral-100: #f3f5f8;
+  --color-neutral-50: #f5f7fa;
+  --color-neutral-0: #ffffff;
+  --color-blue-700: #2547d0;
+  --color-blue-500: #3361ff;
+  --color-blue-50: #ebf1ff;
+  --color-green-500: #21c16b;
+  --color-green-100: #d1fbe9;
+  --color-red-500: #ff3748;
+  --color-red-100: #ffd5d8;
+}
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --app-font: Arial, Helvetica, sans-serif;
+  color-scheme: light;
+  --background: var(--color-neutral-0);
+  --surface: var(--color-neutral-0);
+  --surface-secondary: var(--color-neutral-50);
+  --secondary: var(--color-neutral-100);
+  --text-primary: var(--color-neutral-950);
+  --text-secondary: var(--color-neutral-600);
+  --text-muted: var(--color-neutral-500);
+  --border: var(--color-neutral-200);
+  --border-light: var(--color-neutral-100);
+  --border-strong: var(--color-neutral-300);
+  --primary-light: var(--color-blue-50);
+  --link: var(--color-blue-700);
+  --success-light: var(--color-green-100);
+  --danger-light: var(--color-red-100);
 }
-
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --background: var(--color-neutral-950);
+  --surface: var(--color-neutral-800);
+  --surface-secondary: var(--color-neutral-900);
+  --secondary: var(--color-neutral-700);
+  --text-primary: var(--color-neutral-0);
+  --text-secondary: var(--color-neutral-300);
+  --text-muted: var(--color-neutral-400);
+  --border: var(--color-neutral-700);
+  --border-light: var(--color-neutral-800);
+  --border-strong: var(--color-neutral-600);
+  --primary-light: var(--color-neutral-700);
+  --link: var(--color-blue-50);
+  --success-light: var(--color-neutral-700);
+  --danger-light: var(--color-neutral-700);
+}
+:root[data-font="geist"] {
+  --app-font: var(--font-geist-sans), Arial, sans-serif;
+}
+:root[data-font="geist-mono"] {
+  --app-font: var(--font-geist-mono), monospace;
+}
 @theme inline {
+  --font-sans: var(--app-font);
+  --color-primary: var(--color-blue-500);
+  --color-primary-hover: var(--color-blue-700);
+  --color-primary-light: var(--primary-light);
+  --color-secondary: var(--secondary);
   --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-surface: var(--surface);
+  --color-surface-secondary: var(--surface-secondary);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-border: var(--border);
+  --color-border-light: var(--border-light);
+  --color-border-strong: var(--border-strong);
+  --color-link: var(--link);
+  --color-on-primary: var(--color-neutral-0);
+  --color-on-danger: var(--color-neutral-950);
+  --color-overlay: var(--color-neutral-950);
+  --color-success: var(--color-green-500);
+  --color-success-light: var(--success-light);
+  --color-danger: var(--color-red-500);
+  --color-danger-light: var(--danger-light);
 }
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  body {
+    background: var(--background);
+    color: var(--text-primary);
+    font-family: var(--app-font);
+  }
+  input,
+  textarea,
+  select {
+    color: inherit;
+    background-color: transparent;
+  }
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--text-muted);
+  }
+  :is(a, button, input, textarea, select):focus-visible {
+    outline: 2px solid var(--color-blue-500);
+    outline-offset: 3px;
+  }
+  button:not(:disabled),
+  [role="button"] {
+    cursor: pointer;
+  }
+  :disabled {
+    cursor: not-allowed;
+  }
+  ::selection {
+    background: var(--color-blue-500);
+    color: var(--color-neutral-0);
   }
 }
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Preserve the existing monochrome logo on dark surfaces. */
+[data-theme="dark"] .app-logo {
+  filter: invert(1);
 }

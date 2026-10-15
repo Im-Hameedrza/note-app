@@ -7,9 +7,18 @@ const eslintConfig = defineConfig([
   globalIgnores([
     // Default ignores of eslint-config-next:
     ".next/**",
+    ".next-auth-tests/**",
     "out/**",
     "build/**",
     "next-env.d.ts",
+    "output/**",
+    "archives/**",
+    "tmp/**",
+    "temp/**",
+    "test-results/**",
+    "playwright-report/**",
+    "blob-report/**",
+    "coverage/**",
   ]),
 ]);
 

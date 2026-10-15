@@ -1,0 +1,29 @@
+{
+  "notes": [
+    {
+      "id": "sample-welcome",
+      "title": "Welcome to Notes",
+      "content": "This is a public sample note. Create your own notes, add tags, and use search to find them.",
+      "tags": [
+        "Welcome"
+      ],
+      "isArchived": false,
+      "lastEdited": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "sample-archived",
+      "title": "An archived sample",
+      "content": "Restore this sample from Archived Notes, or delete it when you are ready.",
+      "tags": [
+        "Welcome"
+      ],
+      "isArchived": true,
+      "lastEdited": "2026-01-01T00:00:00.000Z"
+    }
+  ],
+  "users": [],
+  "sessions": [],
+  "passwordResets": [],
+  "rateLimits": [],
+  "noteRequests": []
+}

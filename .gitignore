@@ -1,41 +1,100 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-/node_modules
-/.pnp
+# Dependencies and package-manager state
+node_modules/
+.pnp
 .pnp.*
 .yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+!.yarn/patches/
+!.yarn/plugins/
+!.yarn/releases/
+!.yarn/versions/
 
-# testing
-/coverage
-
-# next.js
-/.next/
+# Next.js, hosting and generated builds
+/.next*/
 /out/
-
-# production
-/build
-
-# misc
-.DS_Store
-*.pem
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# env files (can opt-in for committing if needed)
-.env*
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
+/build/
+/dist/
+/.vercel/
+/.netlify/
+/.turbo/
 next-env.d.ts
+*.tsbuildinfo
+
+# Local environment, credentials and private keys
+.env*
+!.env.example
+.npmrc
+.netrc
+credentials*.json
+secrets*.json
+*service-account*.json
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa
+id_ed25519
+.aws/
+.ssh/
+
+# Private databases, sessions and runtime lock/write files
+/db*.json
+!/db.example.json
+/db.json.*
+/database*.json
+/data/
+/private/
+/storage/
+*.sqlite
+*.sqlite3
+*.sqlite-*
+*.sqlite3-*
+*.db
+*.db-*
+*.sql
+*.sql.gz
+
+# Local backups and archives; may contain private database copies
+/archives/
+/backups/
+*.zip
+*.7z
+*.rar
+*.tar
+*.tar.gz
+*.tgz
+*.bak
+*.backup
+
+# Test output, generated reports, local QA records and scratch files
+/coverage/
+/.nyc_output/
+/playwright-report/
+/test-results/
+/blob-report/
+/artifacts/
+/output/
+/tmp/
+/temp/
+/.cache/
+/docs/reports/
+/docs/qa-*.md
+/docs/qa-*.json
+/docs/organization-report.md
+/docs/publishing-review.*
+*.log
+*.pid
+*.pid.lock
+*.tmp
+*.temp
+*.swp
+*.swo
+*.orig
+*.rej
+*~
+
+# Machine-specific editor and operating-system state
+/.idea/
+/.vscode/
+.DS_Store
+Thumbs.db
+Desktop.ini
